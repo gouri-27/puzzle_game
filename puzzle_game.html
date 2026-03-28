@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Puzzle Game</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #667eea; color: white; }
+    #puzzle { width: 300px; height: 300px; margin: 20px auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .tile { width: 100px; height: 100px; background-size: 300px 300px; cursor: pointer; }
+    #question { display: none; margin-top: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+
+<h2>🧩 Solve the Puzzle!</h2>
+<button onclick="startGame()">Start Game</button>
+
+<div id="puzzle"></div>
+<div id="question"></div>
+
+<script>
+let tiles = [];
+let emptyIndex = 8;
+
+const imageURL = "https://picsum.photos/300";
+const question = "🎉 You solved it! Here's your question: What comes next?";
+
+function startGame() {
+  emptyIndex = 8;
+  document.getElementById("question").style.display = "none"; // hide question initially
+  createPuzzle(imageURL);
+}
+
+function createPuzzle(img) {
+  const puzzle = document.getElementById("puzzle");
+  puzzle.innerHTML = "";
+  tiles = [];
+
+  for (let i = 0; i < 9; i++) {
+    const div = document.createElement("div");
+    div.className = "tile";
+
+    if (i !== 8) {
+      setTile(div, i, img);
+    } else {
+      div.style.background = "#ccc";
+    }
+
+    div.onclick = () => moveTile(i);
+    tiles.push(div);
+    puzzle.appendChild(div);
+  }
+
+  shuffle();
+}
+
+function setTile(tile, index, img) {
+  const x = (index % 3) * -100;
+  const y = Math.floor(index / 3) * -100;
+  tile.style.backgroundImage = `url(${img})`;
+  tile.style.backgroundPosition = `${x}px ${y}px`;
+  tile.dataset.correct = `${x}px ${y}px`; // store correct position
+}
+
+function shuffle() {
+  for (let i = 0; i < 100; i++) {
+    const moves = getValidMoves();
+    const randMove = moves[Math.floor(Math.random() * moves.length)];
+    swap(randMove, emptyIndex);
+    emptyIndex = randMove;
+  }
+}
+
+function getValidMoves() {
+  const moves = [];
+  const row = Math.floor(emptyIndex / 3);
+  const col = emptyIndex % 3;
+
+  if (col > 0) moves.push(emptyIndex - 1);
+  if (col < 2) moves.push(emptyIndex + 1);
+  if (row > 0) moves.push(emptyIndex - 3);
+  if (row < 2) moves.push(emptyIndex + 3);
+
+  return moves;
+}
+
+function moveTile(index) {
+  const validMoves = getValidMoves();
+
+  if (validMoves.includes(index)) {
+    swap(index, emptyIndex);
+    emptyIndex = index;
+    checkWin();
+  }
+}
+
+function swap(i, j) {
+  const tempBg = tiles[i].style.backgroundImage;
+  const tempPos = tiles[i].style.backgroundPosition;
+
+  tiles[i].style.backgroundImage = tiles[j].style.backgroundImage;
+  tiles[i].style.backgroundPosition = tiles[j].style.backgroundPosition;
+
+  tiles[j].style.backgroundImage = tempBg;
+  tiles[j].style.backgroundPosition = tempPos;
+}
+
+function checkWin() {
+  let correct = true;
+
+  for (let i = 0; i < 8; i++) {
+    if (tiles[i].dataset.correct !== tiles[i].style.backgroundPosition) {
+      correct = false;
+      break;
+    }
+  }
+
+  if (correct) {
+    const q = document.getElementById("question");
+    q.style.display = "block";
+    q.innerText = question;
+  }
+}
+</script>
+
+</body>
+</html>
